@@ -1,3 +1,57 @@
+# NatexFront — Nature Explorer (mobile)
+
+Ce dossier contient l'application mobile (Expo + expo-router) pour le projet Nature Explorer.
+
+Structure recommandée
+
+NatureExplorer/
+│
+├── app/                           # Racine du code applicatif
+│   ├── (tabs)/                    # Navigation principale (onglets)
+│   │   ├── camera.tsx             # Page Caméra
+│   │   ├── map.tsx                # Page Carte
+│   │   ├── calendar.tsx           # Page Calendrier
+│   │   ├── photos.tsx             # Page Photos
+│   │   └── profile.tsx            # Page Profil
+│   │
+│   ├── _layout.tsx                # Contient la Tab Navigation
+│   └── index.tsx                  # (optionnel) page d’accueil ou redirection
+│
+├── components/                    # Composants réutilisables
+│   ├── PhotoCard.tsx
+│   └── StatCard.tsx
+│
+├── utils/                         # Fonctions utiles
+│   ├── storage.ts                 # Sauvegarde locale (AsyncStorage)
+│   └── location.ts                # Gestion GPS
+│
+├── assets/                        # Images, icônes, etc.
+│   ├── icon.png
+│   ├── splash.png
+│   └── logo.png
+│
+├── App.tsx                        # Point d’entrée du projet Expo
+├── package.json
+└── README.md
+
+Comment démarrer
+
+1) Installer les dépendances
+
+```powershell
+cd natexfront
+npm install
+```
+
+2) Lancer l'app
+
+```powershell
+npx expo start
+```
+
+Notes
+- Ce README remplace le README généré par `create-expo-app` et ajoute la structure recommandée pour l'équipe.
+- Les fichiers présents dans `app/(tabs)` sont des placeholders — complétez-les pour implémenter la navigation et les écrans.
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
