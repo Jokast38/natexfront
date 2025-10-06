@@ -143,9 +143,9 @@ Structure :
 
 Jokast Kassa
 
-Rufus [Nom à compléter]
+Rufus Mouakassa
 
-Yannick [Nom à compléter]
+Yannick Coulibaly
 
 ---
 
