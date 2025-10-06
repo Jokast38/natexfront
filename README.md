@@ -1,104 +1,160 @@
-# NatexFront — Nature Explorer (mobile)
+# 🌿 Nature Explorer – Carnet de découvertes dans la nature
 
-Ce dossier contient l'application mobile (Expo + expo-router) pour le projet Nature Explorer.
+> **Application mobile développée avec React Native (Expo)** permettant de documenter et visualiser ses découvertes dans la nature (plantes, paysages, animaux, etc.) à travers des photos, une carte interactive et un calendrier d’exploration.
 
-Structure recommandée
+---
+
+## 🎯 Objectif du projet
+
+Créer une application mobile simple et intuitive pour :
+- Prendre des **photos** via la caméra du téléphone.
+- Enregistrer automatiquement la **localisation GPS** et la **date** de chaque observation.
+- Visualiser ses découvertes sur une **carte interactive**.
+- Parcourir ses explorations via un **calendrier** et une **galerie de photos**.
+- Consulter ses **statistiques personnelles** (nombre de photos, lieux visités…).
+
+---
+
+## 🚀 Fonctionnalités à développer
+
+| Fonctionnalité | Description |
+|-----------------|-------------|
+| 📸 **Caméra** | Prendre une photo et l’enregistrer avec la date et la position GPS. |
+| 🌍 **Localisation GPS** | Récupérer automatiquement les coordonnées de l’observation. |
+| 🗺️ **Carte interactive** | Afficher toutes les observations sous forme de marqueurs. Cliquer sur un marqueur ouvre la photo correspondante. |
+| 🗓️ **Calendrier** | Visualiser les jours où des photos ont été prises et filtrer les photos par date. |
+| 🖼️ **Galerie Photos** | Lister toutes les photos avec possibilité de filtrer par date ou par lieu. |
+| 👤 **Profil / Statistiques** | Modifier les informations personnelles et consulter un résumé des activités. |
+
+---
+
+## 🧠 Stack technique
+
+- **Framework :** React Native (Expo)
+- **Langage :** TypeScript
+- **Navigation :** Expo Router + Bottom Tabs
+- **Caméra :** `expo-camera`
+- **Localisation :** `expo-location`
+- **Carte :** `react-native-maps`
+- **Calendrier :** `react-native-calendars`
+- **Stockage local :** `@react-native-async-storage/async-storage`
+- **Gestion d’état :** Hooks React (`useState`, `useEffect`)
+- **Style :** `StyleSheet` (React Native)
+
+---
+
+## 🏗️ Structure du projet
 
 NatureExplorer/
 │
-├── app/                           # Racine du code applicatif
-│   ├── (tabs)/                    # Navigation principale (onglets)
-│   │   ├── camera.tsx             # Page Caméra
-│   │   ├── map.tsx                # Page Carte
-│   │   ├── calendar.tsx           # Page Calendrier
-│   │   ├── photos.tsx             # Page Photos
-│   │   └── profile.tsx            # Page Profil
-│   │
-│   ├── _layout.tsx                # Contient la Tab Navigation
-│   └── index.tsx                  # (optionnel) page d’accueil ou redirection
+├── app/
+│ ├── (tabs)/
+│ │ ├── camera.tsx
+│ │ ├── map.tsx
+│ │ ├── calendar.tsx
+│ │ ├── photos.tsx
+│ │ └── profile.tsx
+│ ├── _layout.tsx
+│ └── index.tsx
 │
-├── components/                    # Composants réutilisables
-│   ├── PhotoCard.tsx
-│   └── StatCard.tsx
+├── components/
+│ ├── PhotoCard.tsx
+│ └── StatCard.tsx
 │
-├── utils/                         # Fonctions utiles
-│   ├── storage.ts                 # Sauvegarde locale (AsyncStorage)
-│   └── location.ts                # Gestion GPS
+├── utils/
+│ ├── storage.ts
+│ └── location.ts
 │
-├── assets/                        # Images, icônes, etc.
-│   ├── icon.png
-│   ├── splash.png
-│   └── logo.png
+├── assets/
+│ ├── icon.png
+│ ├── logo.png
+│ └── splash.png
 │
-├── App.tsx                        # Point d’entrée du projet Expo
-├── package.json
+├── App.tsx
 └── README.md
 
-Comment démarrer
+---
 
-1) Installer les dépendances
+## ⚙️ Installation et exécution
 
-```powershell
-cd natexfront
+### 1️⃣ Cloner le dépôt
+```bash
+git clone https://github.com/<ton-pseudo>/NatureExplorer.git
+cd NatureExplorer
+```
+
+### 2️⃣ Installer les dépendances
+```bash
 npm install
 ```
 
-2) Lancer l'app
-
-```powershell
+### 3️⃣ Lancer le projet
+```bash
 npx expo start
 ```
 
-Notes
-- Ce README remplace le README généré par `create-expo-app` et ajoute la structure recommandée pour l'équipe.
-- Les fichiers présents dans `app/(tabs)` sont des placeholders — complétez-les pour implémenter la navigation et les écrans.
-# Welcome to your Expo app 👋
+📱 Scanne le QR code avec Expo Go pour tester l’application sur ton téléphone
+ou lance un émulateur Android/iOS depuis ton terminal.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+---
 
-## Get started
+## 🧩 Répartition des tâches (équipe)
 
-1. Install dependencies
+| Membre | Rôle | Responsabilités principales |
+|--------|------|-----------------------------|
+| Jokast Kassa (Chef de projet) | Coordination & intégration | Gestion du repo GitHub, architecture, navigation, carte et calendrier |
+| Rufus | Développeur Caméra & GPS | Caméra, capture photo, gestion des métadonnées (date + position), tests techniques |
+| Yannick | Développeur Interface & Profil | Design UI/UX, page Profil, galerie de photos et statistiques |
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## 🧪 Étapes de développement
 
-   ```bash
-   npx expo start
-   ```
+| Étape | Fonctionnalité | État |
+|------:|---------------|:----:|
+| 1️⃣ | Initialisation du projet Expo + navigation | ✅ |
+| 2️⃣ | Page Caméra + autorisations | 🔄 En cours |
+| 3️⃣ | Localisation GPS | 🔜 À faire |
+| 4️⃣ | Carte interactive avec marqueurs | 🔜 À faire |
+| 5️⃣ | Calendrier des explorations | 🔜 À faire |
+| 6️⃣ | Galerie Photos + filtres | 🔜 À faire |
+| 7️⃣ | Profil & statistiques | 🔜 À faire |
+| 8️⃣ | Tests finaux + soutenance | ⏳ Prévue vendredi |
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 🎤 Présentation (Soutenance)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Durée : ~10 minutes
 
-## Get a fresh project
+Structure :
 
-When you're ready, run:
+- Introduction & objectif du projet – Jokast
+- Architecture et choix techniques – Jokast
+- Démonstration technique (Caméra, GPS, Carte) – Rufus
+- Interface & expérience utilisateur – Yannick
+- Difficultés rencontrées et perspectives – Tous
 
-```bash
-npm run reset-project
-```
+---
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 💚 Auteurs
 
-## Learn more
+👨‍💻 Équipe Nature Explorer
 
-To learn more about developing your project with Expo, look at the following resources:
+Jokast Kassa
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Rufus [Nom à compléter]
 
-## Join the community
+Yannick [Nom à compléter]
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 📜 Licence
+
+Projet pédagogique – Institut F2I / Piscine 2025
+Tous droits réservés © 2025
+
+---
+
+Souhaites-tu que j’ajoute en haut du README quelques **badges visuels GitHub** (par ex. “Made with Expo”, “TypeScript”, “In Progress”, “F2I Project”) pour donner un style plus pro à ton dépôt ?
+
