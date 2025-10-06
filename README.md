@@ -151,10 +151,5 @@ Yannick [Nom à compléter]
 
 ## 📜 Licence
 
-Projet pédagogique – Institut F2I / Piscine 2025
+Projet pédagogique – IPSSI / Piscine 2025
 Tous droits réservés © 2025
-
----
-
-Souhaites-tu que j’ajoute en haut du README quelques **badges visuels GitHub** (par ex. “Made with Expo”, “TypeScript”, “In Progress”, “F2I Project”) pour donner un style plus pro à ton dépôt ?
-
