@@ -16,6 +16,7 @@
     "@react-navigation/bottom-tabs": "^7.4.8",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.18",
+    "dayjs": "^1.11.18",
     "expo": "~54.0.12",
     "expo-camera": "~17.0.8",
     "expo-constants": "~18.0.9",
