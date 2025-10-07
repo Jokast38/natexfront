@@ -49,7 +49,7 @@ export default function MapScreen() {
   ], []);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 , width: '100%', height: '100%'}}>
       <PhotoMap photos={photos} />
     </SafeAreaView>
   );
