@@ -1,62 +1,30 @@
-import 'react-native-reanimated';
+import {Stack} from "expo-router";
+import {useFonts} from "expo-font";
+import {useEffect} from "react";
+import * as SplashScreen from 'expo-splash-screen';
 
-import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+export default function RootLayout() {
+  return <Root />;
+}
 
-export default function Layout() {
-  return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: "#3A7D44",
-        tabBarStyle: { backgroundColor: "#f2f2f2" },
-      }}
-    >
-      <Tabs.Screen
-        name="camera"
-        options={{
-          title: "Caméra",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="camera" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="map"
-        options={{
-          title: "Carte",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="map" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="calendar"
-        options={{
-          title: "Calendrier",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="photos"
-        options={{
-          title: "Photos",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="images" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profil",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
-  );
+function Root() {
+    const [loaded] = useFonts({
+        DMSansRegular: require('@/assets/fonts/DMSans-Regular.ttf'),
+        DMSansMedium: require('@/assets/fonts/DMSans-Medium.ttf'),
+        DMSansBold: require('@/assets/fonts/DMSans-SemiBold.ttf'),
+    });
+
+    useEffect(() => {
+        if (loaded) {
+            SplashScreen.hideAsync();
+        }
+    }, [loaded]);
+
+    if (!loaded) {
+        return null;
+    }
+
+    return (
+        <Stack screenOptions={{headerShown: false, contentStyle: {backgroundColor: 'white'}}}/>
+    );
 }
