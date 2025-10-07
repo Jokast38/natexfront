@@ -151,7 +151,18 @@ export default function CameraScreen(): JSX.Element {
         {uploading ? (
           <ActivityIndicator size="large" color="#fff" />
         ) : (
-          <Button title="📸 Prendre une photo" onPress={takePicture} />
+          <Pressable
+            onPress={takePicture}
+            style={({ pressed }) => [
+              styles.shutter,
+              pressed ? styles.shutterPressed : null,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Prendre une photo"
+            android_ripple={{ color: "rgba(255,255,255,0.2)", radius: 60 }}
+          >
+            <View style={styles.shutterInner} />
+          </Pressable>
         )}
       </View>
     </SafeAreaView>
@@ -176,8 +187,30 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 30,
     alignSelf: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.0)",
     borderRadius: 12,
     padding: 10,
+  },
+  shutter: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  shutterPressed: {
+    transform: [{ scale: 0.96 }],
+    backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  shutterInner: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#fff',
   },
 });
