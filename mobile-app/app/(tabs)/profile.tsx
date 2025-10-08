@@ -108,7 +108,7 @@ export default function Profile() {
                 </Pressable>
 
                 <Text
-                    style={[styles.nameLargeInput, {fontFamily: typography.fontFamily.bold}]}>{user.firstName} {user.lastName}</Text>
+                    style={[styles.nameLargeInput, {fontFamily: typography.fontFamily.bold}]}>{user?.firstName} {user.lastName}</Text>
 
                 <Text style={styles.bioText}>{bio}</Text>
 

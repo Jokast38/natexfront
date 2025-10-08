@@ -1,26 +1,24 @@
-import {createAsyncThunk} from "@reduxjs/toolkit";
-import apiClient from "@/src/utils/apiClient";
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import userService from "@/src/services/userService";
 
 export const updateUser = createAsyncThunk(
-    'user/updateUser',
-    async (userData: any, {rejectWithValue}) => {
-        try {
-            const response = await apiClient.put(`/user/${userData.id}`, userData);
-            return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.error || 'Une erreur est survenue');
-        }
+  "user/updateUser",
+  async (userData, { rejectWithValue }) => {
+    try {
+      return await userService.updateUser(userData);
+    } catch (error:any) {
+      return rejectWithValue(error.response?.data?.error || "Une erreur est survenue");
     }
+  }
 );
 
 export const getUser = createAsyncThunk(
-    'user/getUser',
-    async (userId: number, {rejectWithValue}) => {
-        try {
-            const response = await apiClient.get(`/user/${userId}`);
-            return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response?.data?.error || 'Une erreur est survenue');
-        }
+  "user/getUser",
+  async (userId:any, { rejectWithValue }) => {
+    try {
+      return await userService.getUser(userId);
+    } catch (error:any) {
+      return rejectWithValue(error.response?.data?.error || "Une erreur est survenue");
     }
+  }
 );
