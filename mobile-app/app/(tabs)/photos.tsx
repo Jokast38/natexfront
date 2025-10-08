@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
+import * as Haptics from "expo-haptics"; // 🔔
 
 // Optionnel : change la langue du formatage de date
 dayjs.locale("fr");
@@ -60,15 +61,29 @@ export default function GalleryScreen() {
     }
   };
 
-  // Delete an observation locally (mock) with confirmation
-  const handleDelete = (id: string) => {
-    Alert.alert('Supprimer', 'Voulez-vous supprimer cette photo ?', [
-      { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: () => {
-        setObservations((prev) => prev.filter((p) => p.id !== id));
-        setModalVisible(false);
-      } },
-    ]);
+  // 🗑️ Suppression avec vibration au moment du dialogue
+  const handleDelete = async (id: string) => {
+    // 💥 Vibration forte pour signaler une action importante
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+    Alert.alert(
+      'Supprimer',
+      'Voulez-vous supprimer cette photo ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            // 🔔 Vibration courte au moment de la suppression effective
+            await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+            setObservations((prev) => prev.filter((p) => p.id !== id));
+            setModalVisible(false);
+          },
+        },
+      ]
+    );
   };
 
   const BACKEND_URL = "http://10.0.2.2:4000";
@@ -188,7 +203,7 @@ export default function GalleryScreen() {
             initialScrollIndex={selectedIndex}
             getItemLayout={(_, index) => ({ length: window.width, offset: window.width * index, index })}
             renderItem={({ item }) => (
-              <View style={[styles.modalPage, { width: window.width }]}> 
+              <View style={[styles.modalPage, { width: window.width }]}>
                 <TouchableOpacity
                   style={styles.modalImageWrap}
                   activeOpacity={1}

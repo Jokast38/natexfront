@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
+import * as Haptics from "expo-haptics";
+import * as Notifications from "expo-notifications";
 
 export default function CameraScreen(): JSX.Element {
   // 🔐 Permissions caméra
@@ -25,6 +27,22 @@ export default function CameraScreen(): JSX.Element {
   const [uploading, setUploading] = useState(false);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
   const lastTapRef = useRef<number | null>(null);
+
+  // 🔔 Configuration des notifications locales
+  useEffect(() => {
+    (async () => {
+      await Notifications.requestPermissionsAsync();
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: false,
+          shouldSetBadge: false,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
+    })();
+  }, []);
 
   // 🔔 Effet : effacer le message d’info après 1 seconde
   useEffect(() => {
@@ -60,10 +78,24 @@ export default function CameraScreen(): JSX.Element {
     try {
       const photo = await cameraRef.current.takePictureAsync();
       console.log("📸 Photo prise :", photo?.uri);
+
+      // 💥 Vibration courte pour signaler la capture
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // 🔔 Notification locale
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "📷 Photo capturée",
+          body: "L’image a été enregistrée localement !",
+        },
+        trigger: null,
+      });
+
       Alert.alert("Photo capturée", "Image sauvegardée localement !");
       await uploadObservation(photo.uri);
     } catch (error) {
       console.error("Erreur de capture :", error);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Erreur", "Impossible de prendre la photo");
     }
   };
@@ -107,9 +139,21 @@ export default function CameraScreen(): JSX.Element {
       }
 
       const result = await response.json();
+
+      // ✅ Vibration et notification de succès
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "✅ Upload réussi",
+          body: "La photo a été envoyée au serveur avec succès.",
+        },
+        trigger: null,
+      });
+
       Alert.alert("✅ Upload réussi", `Observation enregistrée (id: ${result.id || "?"})`);
     } catch (err: any) {
       console.error("Upload error:", err);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Erreur d’envoi", err.message || "Impossible d’envoyer la photo");
     } finally {
       setUploading(false);
@@ -123,6 +167,10 @@ export default function CameraScreen(): JSX.Element {
     if (lastTapRef.current && now - lastTapRef.current < DOUBLE_TAP_DELAY) {
       setFacing((prev) => (prev === "back" ? "front" : "back"));
       setInfoMsg(facing === "back" ? "Selfie" : "Arrière");
+
+      // 💥 Vibration légère au changement
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
       lastTapRef.current = null;
     } else {
       lastTapRef.current = now;
@@ -195,22 +243,22 @@ const styles = StyleSheet.create({
     width: 78,
     height: 78,
     borderRadius: 39,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
+    backgroundColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 6,
   },
   shutterPressed: {
     transform: [{ scale: 0.96 }],
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
   shutterInner: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
 });
