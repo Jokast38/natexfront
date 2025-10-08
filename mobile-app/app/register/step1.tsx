@@ -12,6 +12,7 @@ import CustomInput from "@/src/components/CustomInput";
 import HeaderBack from "@/src/components/HeaderBack";
 import {spacing} from "@/src/theme/spacing";
 import {SafeAreaView} from "react-native-safe-area-context";
+import {colors} from "@/src/theme/color";
 
 interface StepOneValues {
     firstName: string;
@@ -60,7 +61,7 @@ export default function StepOneScreen() {
 
                                 <TouchableOpacity style={styles.button} onPress={handleSubmit as any}>
                                     <Text style={{
-                                        color: "white",
+                                        color: colors.text.inverse,
                                         fontFamily: "PoppinsMedium",
                                         fontSize: 16
                                     }}>Suivant</Text>
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
         fontFamily: 'PoppinsBold',
     },
     button: {
-        backgroundColor: '#4881ea',
+        backgroundColor: colors.primary,
         height: 45,
         borderRadius: 25,
         justifyContent: 'center',

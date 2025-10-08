@@ -2,6 +2,7 @@ import {configureStore, combineReducers} from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {persistReducer, persistStore} from 'redux-persist';
 import authReducer from "@/src/redux/slices/authSlice";
+import userReducer from "@/src/redux/slices/userSlice";
 
 
 const persistConfig = {
@@ -12,6 +13,7 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
     auth: authReducer,
+    user: userReducer,
 });
 
 // Appliquer Redux Persist au reducer combiné

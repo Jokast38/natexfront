@@ -8,7 +8,7 @@ import {
     StyleSheet
 } from 'react-native';
 import {Formik} from "formik";
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {router, useLocalSearchParams} from "expo-router";
 import {StepTwoSchema} from "@/src/schemas/registerSchema";
 import {register} from "@/src/redux/actions/authActions";
@@ -18,9 +18,9 @@ import {useResetRouter} from "@/src/hooks/useResetRouter";
 import CustomInput from "@/src/components/CustomInput";
 import HeaderBack from "@/src/components/HeaderBack";
 import {spacing} from "@/src/theme/spacing";
-import CrossIcon from "@/src/svg/createAlert/CrossIcon";
 import {checkPasswordStrength, getPasswordErrorMessage} from "@/src/utils/passwordStrength";
 import {SafeAreaView} from "react-native-safe-area-context";
+import {colors} from "@/src/theme/color";
 
 interface StepTwoValues {
     email: string;
@@ -50,10 +50,15 @@ export default function StepThreeScreen() {
         password: '',
     }
 
+    useEffect(() => {
+        console.log("params:", params)
+    })
+
     const handleSubmit = async (values: StepTwoValues) => {
         setLoginError('');
         try {
-            await dispatch(register({...params, password: values.password})).unwrap()
+            console.log({...params, password: values.password})
+            await dispatch(register({...params, email: values.email, password: values.password})).unwrap()
             resetTo("/login");
         } catch (error) {
             setLoginError(error as string);
@@ -78,7 +83,7 @@ export default function StepThreeScreen() {
                                     <CustomInput
                                         onChangeText={(text) => {
                                             handleChange("email")(text);
-                                            setValuesError((prev) => ({...prev, email: null}));
+                                            setValuesError((prev: any) => ({...prev, email: null}));
                                         }}
                                         value={values.email}
                                         keyboardType={"email-address"}
@@ -133,7 +138,7 @@ const styles = StyleSheet.create({
         fontFamily: 'PoppinsBold',
     },
     button: {
-        backgroundColor: '#4881ea',
+        backgroundColor: colors.primary,
         height: 45,
         borderRadius: 25,
         justifyContent: 'center',

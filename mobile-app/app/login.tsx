@@ -42,7 +42,7 @@ export default function LoginScreen() {
     const handleSubmit = async (values: Values) => {
         try {
             await dispatch(login(values)).unwrap()
-            resetTo('/home')
+            resetTo('/photos')
         } catch (error) {
             setRegisterError(error as string);
         }

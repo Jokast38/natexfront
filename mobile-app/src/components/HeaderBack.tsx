@@ -12,7 +12,7 @@ function HeaderBack({title}: HeaderBackProps) {
         <View style={styles.container}>
             {/* Icône de retour */}
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <AntDesign name="leftcircleo" size={24} color="black"/>
+                <AntDesign name="left-circle" size={24} color="black"/>
             </TouchableOpacity>
 
             {/* Titre centré */}

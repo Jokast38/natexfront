@@ -20,6 +20,7 @@ export const register = createAsyncThunk(
     'auth/register',
     async (data: RegisterThunk, {rejectWithValue}) => {
         try {
+            console.log("data:", data);
             const response = await apiClient.post("/user", data);
 
             return response.data;
