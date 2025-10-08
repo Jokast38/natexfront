@@ -17,6 +17,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
+import { DeviceEventEmitter } from 'react-native';
 // We upload files to the backend and let the server handle Cloudinary (safer, avoids unsigned preset issues)
 // Use local config file to avoid Metro resolution issues with @env during dev
 import { BACKEND_URL as ENV_BACKEND_URL } from "../config/env";
@@ -70,11 +71,10 @@ export default function CameraScreen(): JSX.Element {
     try {
       const raw = await AsyncStorage.getItem(PENDING_KEY);
       const arr = raw ? JSON.parse(raw) : [];
-      if (!arr.length) return;
+      if (!Array.isArray(arr) || arr.length === 0) return;
       console.log('Flushing pending uploads', arr.length);
       for (const item of arr) {
         try {
-          // Try backend multipart upload (backend should accept 'photo' file)
           const form = new FormData();
           // @ts-ignore
           form.append('photo', { uri: item.uri, name: item.filename || 'photo.jpg', type: item.type || 'image/jpeg' });
@@ -83,12 +83,13 @@ export default function CameraScreen(): JSX.Element {
           if (item.locationName) form.append('locationName', item.locationName);
           if (item.legend) form.append('legend', item.legend);
 
-          const rawRes = await fetch(`${BACKEND_URL}/observations`, { method: 'POST', body: form });
-          if (rawRes.ok) {
+          const res = await fetch(`${BACKEND_URL}/observations`, { method: 'POST', body: form });
+          if (res.ok) {
             await removePendingUpload(item.id);
             console.log('Pending upload succeeded', item.id);
+            try { DeviceEventEmitter.emit('observation:created'); } catch (e) { /* ignore */ }
           } else {
-            console.warn('Pending upload failed', item.id, await rawRes.text());
+            console.warn('Pending upload failed', item.id, await res.text());
           }
         } catch (err) {
           console.warn('Error flushing pending upload', item.id, err);
@@ -159,9 +160,8 @@ export default function CameraScreen(): JSX.Element {
       setLegendModalVisible(true);
       // 💥 Vibration courte pour signaler la capture
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-      // Simple feedback; no push notification yet — we'll notify after upload succeeds/fails
-      Alert.alert("Photo capturée", "Ajoute une légende avant l'envoi.");
+      // Simple transient feedback shown in-app (no blocking alert)
+      setInfoMsg('Photo capturée — ajoute une légende');
     } catch (error) {
       console.error("Erreur de capture :", error);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -170,7 +170,7 @@ export default function CameraScreen(): JSX.Element {
   };
 
   // 🌍 Envoi de la photo : upload Cloudinary puis enregistrement backend
-  const BACKEND_URL = ENV_BACKEND_URL || "http://192.168.1.212:3000/api";
+  const BACKEND_URL = ENV_BACKEND_URL || "http://10.0.2.2:3000/api";
 
   const uploadObservation = async (uri: string, legendText: string = "") => {
     setUploading(true);
@@ -179,29 +179,21 @@ export default function CameraScreen(): JSX.Element {
     let locationName: string | null = null;
 
     try {
-      // Demande de permission GPS
+      // get location if permission
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
         const location = await Location.getCurrentPositionAsync({});
         lat = location.coords.latitude;
         lng = location.coords.longitude;
-
         try {
           const places = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
           if (places && places.length > 0) {
             const p = places[0] as any;
             locationName = `${p.name || p.street || 'Lieu inconnu'}, ${p.city || p.region || ''}`.replace(/,\s*$/, '');
           }
-        } catch (e) {
-          console.warn('Reverse geocode failed', e);
-        }
+        } catch (e) { console.warn('Reverse geocode failed', e); }
       }
-    } catch (e) {
-      console.warn('Location unavailable', e);
-    }
 
-    try {
-      // Send the file to backend as multipart/form-data. The backend will upload to Cloudinary.
       const form = new FormData();
       const filename = uri.split('/').pop() || 'photo.jpg';
       const match = filename.match(/\.(\w+)$/);
@@ -209,23 +201,24 @@ export default function CameraScreen(): JSX.Element {
       const type = ext === 'png' ? 'image/png' : 'image/jpeg';
       // @ts-ignore
       form.append('photo', { uri, name: filename, type });
-      if (lat && lng) {
-        form.append('lat', String(lat));
-        form.append('lng', String(lng));
-      }
+      if (lat !== null) form.append('lat', String(lat));
+      if (lng !== null) form.append('lng', String(lng));
       if (locationName) form.append('locationName', locationName);
       if (legendText) form.append('legend', legendText);
 
-      const raw = await fetch(`${BACKEND_URL}/observations`, { method: 'POST', body: form });
-      if (!raw.ok) {
-        const t = await raw.text();
-        throw new Error(`Backend multipart upload failed: ${t || raw.status}`);
+      const res = await fetch(`${BACKEND_URL}/observations`, { method: 'POST', body: form });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text || `HTTP ${res.status}`);
       }
 
-      const j = await raw.json();
+      const body = await res.json().catch(() => ({}));
+      // feedback: gentle, non-blocking
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      await Notifications.scheduleNotificationAsync({ content: { title: '✅ Upload réussi', body: `📍 ${locationName || 'Lieu non identifié'}` }, trigger: null });
-      Alert.alert('✅ Upload réussi', `Observation enregistrée (id: ${j.id || '?'})`);
+      setInfoMsg('Upload réussi');
+      try { await Notifications.scheduleNotificationAsync({ content: { title: 'Upload réussi', body: locationName || 'Observation enregistrée' }, trigger: null }); } catch (e) { /* ignore */ }
+      try { DeviceEventEmitter.emit('observation:created'); } catch (e) { /* ignore */ }
+      console.log('Upload success', body);
     } catch (err: any) {
       console.error('Upload error:', err);
       // Save to pending uploads to retry later
@@ -236,29 +229,15 @@ export default function CameraScreen(): JSX.Element {
         const ext = match ? match[1] : 'jpg';
         const type = ext === 'png' ? 'image/png' : 'image/jpeg';
         await addPendingUpload({ id, uri, filename, type, lat, lng, locationName, legend: legendText });
-        console.log('Saved failed upload to pending queue', id);
+        setInfoMsg("Upload sauvé en file d'attente");
       } catch (saveErr) {
         console.warn('Failed to save pending upload', saveErr);
-      }
-      // send failure notification
-      try {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: '❌ Upload échoué',
-            body: String(err.message || 'Erreur lors de l\'envoi'),
-          },
-          trigger: null,
-        });
-      } catch (e) {
-        console.warn('Failed to send failure notification', e);
+        Alert.alert('Erreur', 'Impossible de sauvegarder la photo pour réessayer plus tard.');
       }
 
-      // If it's a Cloudinary preset error, give actionable hint
-      const msg = String(err.message || 'Impossible d\'envoyer la photo');
+      const msg = String(err?.message || 'Erreur lors de l\'envoi');
       if (msg.toLowerCase().includes('upload preset') || msg.toLowerCase().includes('preset not found')) {
-        Alert.alert('Upload échoué', 'Le preset Cloudinary spécifié est introuvable. Vérifie que le `CLOUDINARY_UPLOAD_PRESET` existe et est configuré en mode "unsigned" dans ton tableau de bord Cloudinary.');
-      } else {
-        Alert.alert('Erreur d’envoi', msg);
+        Alert.alert('Upload échoué', 'Le preset Cloudinary est introuvable. Vérifie la configuration serveur Cloudinary.');
       }
     } finally {
       setUploading(false);

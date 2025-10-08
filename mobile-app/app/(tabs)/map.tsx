@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StyleSheet, View, Image, Text } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { BACKEND_URL as ENV_BACKEND_URL } from '../config/env';
 
@@ -15,10 +16,24 @@ type PhotoPoint = {
   createdAt?: string;
 };
 
-function PhotoMap({ photos, current }: { photos: PhotoPoint[]; current?: { latitude: number; longitude: number } }) {
+function PhotoMap({ photos, current, mapRef }: { photos: PhotoPoint[]; current?: { latitude: number; longitude: number }; mapRef?: React.RefObject<any> }) {
   const initial = photos[0] || (current ? { latitude: current.latitude, longitude: current.longitude } : { latitude: 48.8566, longitude: 2.3522 });
+  const localRef = React.useRef<any>(null);
+  const usedMapRef = (mapRef as any) ?? localRef;
+
+  // when current changes, animate the map to the user's location
+  React.useEffect(() => {
+    if (current && usedMapRef.current) {
+      try {
+        usedMapRef.current.animateToRegion({ latitude: current.latitude, longitude: current.longitude, latitudeDelta: 0.02, longitudeDelta: 0.02 }, 500);
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [current, usedMapRef]);
   return (
     <MapView
+      ref={usedMapRef}
       style={styles.map}
       initialRegion={{
         latitude: initial.latitude ?? 48.8566,
@@ -64,6 +79,7 @@ export default function MapScreen() {
   const [photos, setPhotos] = useState<PhotoPoint[]>([]);
   const [current, setCurrent] = useState<{ latitude: number; longitude: number } | undefined>(undefined);
   const locationSubscriptionRef = useRef<any>(null);
+  const mapRef = useRef<any>(null);
 
   // fetch observations from backend
   useEffect(() => {
@@ -131,9 +147,22 @@ export default function MapScreen() {
   }, []);
   // no animated pulse - current position is a static green dot updated in real-time
 
+  // when screen comes into focus, center map on current position if available
+  useFocusEffect(
+    React.useCallback(() => {
+      if (current && mapRef.current && typeof mapRef.current.animateToRegion === 'function') {
+        try {
+          mapRef.current.animateToRegion({ latitude: current.latitude, longitude: current.longitude, latitudeDelta: 0.02, longitudeDelta: 0.02 }, 500);
+        } catch (e) {
+          // ignore
+        }
+      }
+    }, [current])
+  );
+
   return (
     <SafeAreaView style={{ flex: 1 , width: '100%', height: '100%'}}>
-      <PhotoMap photos={photos} current={current} />
+      <PhotoMap photos={photos} current={current} mapRef={mapRef} />
     </SafeAreaView>
   );
 }
@@ -180,6 +209,6 @@ const styles = StyleSheet.create({
   },
   currentMarkerWrap: { alignItems: 'center', justifyContent: 'center' },
   pulse: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,0,0,0.3)' },
-  currentOuter: { position: 'absolute', width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(255,0,0,0.2)' },
-  currentDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: 'red', borderWidth: 2, borderColor: '#fff' },
+  currentOuter: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,200,0,0.15)' },
+  currentDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#00C853', borderWidth: 2, borderColor: '#fff' },
 });
