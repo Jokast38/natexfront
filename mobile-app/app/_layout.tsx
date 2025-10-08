@@ -2,10 +2,13 @@ import {Stack} from "expo-router";
 import {useFonts} from "expo-font";
 import {useEffect} from "react";
 import * as SplashScreen from 'expo-splash-screen';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {Provider, useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, persistor, RootState, store} from '@/src/redux/store';
+
 
 export default function RootLayout() {
-  return <Root />;
+    return <Root/>;
 }
 
 function Root() {
@@ -26,8 +29,10 @@ function Root() {
     }
 
     return (
-        <SafeAreaProvider>
-            <Stack screenOptions={{headerShown: false, contentStyle: {backgroundColor: 'white'}}}/>
-        </SafeAreaProvider>
+        <Provider store={store}>
+            <SafeAreaProvider>
+                <Stack screenOptions={{headerShown: false, contentStyle: {backgroundColor: 'white'}}}/>
+            </SafeAreaProvider>
+        </Provider>
     );
 }
