@@ -4,6 +4,7 @@ const fs = require('fs');
 const cloudinary = require('cloudinary').v2;
 const dotenv = require('dotenv');
 const { PrismaClient } = require('@prisma/client');
+const { get } = require('http');
 const prisma = new PrismaClient();
 
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
@@ -80,5 +81,38 @@ exports.createObservation = async (req, res) => {
   } catch (err) {
     console.error('observations.createObservation error', err);
     return res.status(500).json({ success: false, message: err.message || 'Upload failed' });
+  }
+};
+
+exports.getObservations = async (req, res) => {
+  try {
+    const observations = await prisma.observation.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    return res.status(200).json({ success: true, observations });
+  } catch (err) {
+    console.error('observations.getObservations error', err);
+    return res.status(500).json({ success: false, message: err.message || 'Failed to retrieve observations' });
+  }
+};
+exports.deleteObservation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ success: false, message: 'Missing observation ID' });
+
+    // Prisma model uses Int for id — parse and validate
+    const idInt = parseInt(id, 10);
+    if (Number.isNaN(idInt)) return res.status(400).json({ success: false, message: 'Invalid observation ID (expected integer)' });
+
+    // Check if observation exists
+    const existing = await prisma.observation.findUnique({ where: { id: idInt } });
+    if (!existing) return res.status(404).json({ success: false, message: 'Observation not found' });
+
+    // Delete from DB
+    await prisma.observation.delete({ where: { id: idInt } });
+    return res.status(204).send();
+  } catch (err) {
+    console.error('observations.deleteObservation error', err);
+    return res.status(500).json({ success: false, message: err.message || 'Failed to delete observation' });
   }
 };

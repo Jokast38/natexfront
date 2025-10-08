@@ -170,7 +170,7 @@ export default function CameraScreen(): JSX.Element {
   };
 
   // 🌍 Envoi de la photo : upload Cloudinary puis enregistrement backend
-  const BACKEND_URL = ENV_BACKEND_URL || "http://localhost:3000";
+  const BACKEND_URL = ENV_BACKEND_URL || "http://192.168.1.212:3000/api";
 
   const uploadObservation = async (uri: string, legendText: string = "") => {
     setUploading(true);
