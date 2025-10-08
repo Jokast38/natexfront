@@ -35,7 +35,7 @@ export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const BACKEND_URL = "http://10.0.2.2:4000";
+  const BACKEND_URL = "http://localhost:3000";
 
   useEffect(() => {
     let mounted = true;

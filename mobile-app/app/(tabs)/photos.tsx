@@ -86,7 +86,7 @@ export default function GalleryScreen() {
     );
   };
 
-  const BACKEND_URL = "http://10.0.2.2:4000";
+  const BACKEND_URL = "http://localhost:3000";
 
   useEffect(() => {
     let mounted = true;

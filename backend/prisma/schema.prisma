@@ -21,3 +21,13 @@ model User {
   password  String
   createdAt DateTime @default(now())
 }
+
+model Observation {
+  id          Int      @id @default(autoincrement())
+  imageUrl    String?
+  lat         Float?
+  lng         Float?
+  locationName String?
+  legend      String?
+  createdAt   DateTime @default(now())
+}

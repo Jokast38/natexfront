@@ -17,7 +17,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
-import { uploadToCloudinary } from "../utils/uploadToCloudinary";
+// We upload files to the backend and let the server handle Cloudinary (safer, avoids unsigned preset issues)
 // Use local config file to avoid Metro resolution issues with @env during dev
 import { BACKEND_URL as ENV_BACKEND_URL } from "../config/env";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -170,7 +170,7 @@ export default function CameraScreen(): JSX.Element {
   };
 
   // 🌍 Envoi de la photo : upload Cloudinary puis enregistrement backend
-  const BACKEND_URL = ENV_BACKEND_URL || "http://10.0.2.2:4000";
+  const BACKEND_URL = ENV_BACKEND_URL || "http://localhost:3000";
 
   const uploadObservation = async (uri: string, legendText: string = "") => {
     setUploading(true);
@@ -201,68 +201,31 @@ export default function CameraScreen(): JSX.Element {
     }
 
     try {
-      // Upload sur Cloudinary via helper
-      let imageUrl: string | null = null;
-      try {
-        imageUrl = await uploadToCloudinary(uri);
-      } catch (cloudErr: any) {
-        console.warn('Cloudinary upload failed:', cloudErr.message || cloudErr);
-        // If preset missing or other Cloudinary error, fallback to backend multipart upload
-        const isPresetError = String(cloudErr.message || '').toLowerCase().includes('upload preset') || String(cloudErr.message || '').toLowerCase().includes('cloudinary');
-        if (!isPresetError) throw cloudErr;
+      // Send the file to backend as multipart/form-data. The backend will upload to Cloudinary.
+      const form = new FormData();
+      const filename = uri.split('/').pop() || 'photo.jpg';
+      const match = filename.match(/\.(\w+)$/);
+      const ext = match ? match[1] : 'jpg';
+      const type = ext === 'png' ? 'image/png' : 'image/jpeg';
+      // @ts-ignore
+      form.append('photo', { uri, name: filename, type });
+      if (lat && lng) {
+        form.append('lat', String(lat));
+        form.append('lng', String(lng));
+      }
+      if (locationName) form.append('locationName', locationName);
+      if (legendText) form.append('legend', legendText);
 
-        // Fallback: send file directly to backend as multipart form
-        const form = new FormData();
-        const filename = uri.split('/').pop() || 'photo.jpg';
-        const match = filename.match(/\.(\w+)$/);
-        const ext = match ? match[1] : 'jpg';
-        const type = ext === 'png' ? 'image/png' : 'image/jpeg';
-        // @ts-ignore
-        form.append('photo', { uri, name: filename, type });
-        if (lat && lng) {
-          form.append('lat', String(lat));
-          form.append('lng', String(lng));
-        }
-        if (locationName) form.append('locationName', locationName);
-        if (legendText) form.append('legend', legendText);
-
-        const raw = await fetch(`${BACKEND_URL}/observations`, { method: 'POST', body: form });
-        if (!raw.ok) {
-          const t = await raw.text();
-          throw new Error(`Backend multipart upload failed: ${t || raw.status}`);
-        }
-
-        const j = await raw.json();
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        await Notifications.scheduleNotificationAsync({ content: { title: '✅ Upload réussi', body: `📍 ${locationName || 'Lieu non identifié'}` }, trigger: null });
-        Alert.alert('✅ Upload réussi', `Observation enregistrée (id: ${j.id || '?'})`);
-        return;
+      const raw = await fetch(`${BACKEND_URL}/observations`, { method: 'POST', body: form });
+      if (!raw.ok) {
+        const t = await raw.text();
+        throw new Error(`Backend multipart upload failed: ${t || raw.status}`);
       }
 
-      // If Cloudinary upload succeeded, send imageUrl + metadata to backend
-      const res = await fetch(`${BACKEND_URL}/observations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl, lat, lng, locationName, legend: legendText }),
-      });
-
-      if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(`Backend error: ${txt || res.status}`);
-      }
-
-      const json = await res.json();
-
+      const j = await raw.json();
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '✅ Upload réussi',
-          body: `📍 ${locationName || 'Lieu non identifié'}`,
-        },
-        trigger: null,
-      });
-
-      Alert.alert('✅ Upload réussi', `Observation enregistrée (id: ${json.id || '?'})`);
+      await Notifications.scheduleNotificationAsync({ content: { title: '✅ Upload réussi', body: `📍 ${locationName || 'Lieu non identifié'}` }, trigger: null });
+      Alert.alert('✅ Upload réussi', `Observation enregistrée (id: ${j.id || '?'})`);
     } catch (err: any) {
       console.error('Upload error:', err);
       // Save to pending uploads to retry later
