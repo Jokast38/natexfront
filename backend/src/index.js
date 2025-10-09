@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 
 const userRouter = require('./routes/user');
 const authRouter = require('./routes/auth');
+const observationsRouter = require('./routes/observations');
 
 dotenv.config({path: `.env.${process.env.NODE_ENV || 'development'}`});
 
@@ -23,6 +24,9 @@ app.use(
 // Routes
 app.use("/api/user", userRouter);
 app.use("/api/auth", authRouter);
+app.use('/api/observations', observationsRouter);
+// Backwards-compatible route used by the mobile app (some clients post to /observations)
+app.use('/observations', observationsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://${HOST}:${PORT}`);
