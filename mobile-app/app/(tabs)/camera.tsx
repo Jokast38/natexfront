@@ -312,12 +312,19 @@ export default function CameraScreen(): JSX.Element {
               onChangeText={setLegend}
               multiline
             />
+            {/* Uploading indicator shown while uploading */}
+            {uploading && (
+              <View style={styles.uploadingWrap}>
+                <ActivityIndicator size="small" color="#4CAF50" />
+                <Text style={styles.uploadingText}>Envoi en cours…</Text>
+              </View>
+            )}
             <View style={styles.modalButtons}>
-              <TouchableOpacity onPress={() => setLegendModalVisible(false)} style={styles.cancelBtn}>
-                <Text style={{ color: '#777' }}>Annuler</Text>
+              <TouchableOpacity disabled={uploading} onPress={() => setLegendModalVisible(false)} style={[styles.cancelBtn, uploading ? styles.disabledBtn : null]}>
+                <Text style={{ color: uploading ? '#bbb' : '#777' }}>Annuler</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={async () => { if (photoUri) await uploadObservation(photoUri, legend || 'Sans légende'); }} style={styles.submitBtn}>
-                <Text style={{ color: '#fff' }}>Envoyer</Text>
+              <TouchableOpacity disabled={uploading} onPress={async () => { if (photoUri) await uploadObservation(photoUri, legend || 'Sans légende'); }} style={[styles.submitBtn, uploading ? styles.disabledSubmit : null]}>
+                <Text style={{ color: '#fff' }}>{uploading ? 'Envoi…' : 'Envoyer'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -396,4 +403,8 @@ const styles = StyleSheet.create({
   modalButtons: { flexDirection: "row", justifyContent: "flex-end", marginTop: 12 },
   cancelBtn: { padding: 10, marginRight: 10 },
   submitBtn: { backgroundColor: "#4CAF50", padding: 10, borderRadius: 8 },
+  uploadingWrap: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
+  uploadingText: { marginLeft: 8, color: '#4CAF50' },
+  disabledBtn: { opacity: 0.6 },
+  disabledSubmit: { backgroundColor: '#9CCC9C' },
 });
