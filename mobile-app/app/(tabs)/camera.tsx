@@ -33,6 +33,7 @@ export default function CameraScreen(): JSX.Element {
   // ⚙️ États locaux
   const [facing, setFacing] = useState<"front" | "back">("back");
   const [uploading, setUploading] = useState(false);
+  const [zoom, setZoom] = useState<number>(0); // value between 0 (no zoom) and 1 (max)
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
   const lastTapRef = useRef<number | null>(null);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -263,6 +264,11 @@ export default function CameraScreen(): JSX.Element {
     }
   };
 
+  // Zoom handlers (0..1)
+  const clampZoom = (v: number) => Math.max(0, Math.min(1, v));
+  const increaseZoom = (step = 0.1) => setZoom((z) => clampZoom(Number((z + step).toFixed(2))));
+  const decreaseZoom = (step = 0.1) => setZoom((z) => clampZoom(Number((z - step).toFixed(2))));
+
   // 🧭 Rendu de la vue caméra
   return (
     <SafeAreaView style={styles.container}>
@@ -271,6 +277,7 @@ export default function CameraScreen(): JSX.Element {
           ref={cameraRef}
           style={StyleSheet.absoluteFill}
           facing={facing}
+          zoom={zoom}
           mode="picture"
         />
       </Pressable>
@@ -285,18 +292,30 @@ export default function CameraScreen(): JSX.Element {
         {uploading ? (
           <ActivityIndicator size="large" color="#fff" />
         ) : (
-          <Pressable
-            onPress={takePicture}
-            style={({ pressed }) => [
-              styles.shutter,
-              pressed ? styles.shutterPressed : null,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Prendre une photo"
-            android_ripple={{ color: "rgba(255,255,255,0.2)", radius: 60 }}
-          >
-            <View style={styles.shutterInner} />
-          </Pressable>
+          <View style={styles.controlsRow}>
+            <View style={styles.zoomControls}>
+              <TouchableOpacity disabled={facing === 'front' || uploading} onPress={() => decreaseZoom(0.1)} style={[styles.zoomBtn, (facing === 'front' || uploading) ? styles.disabledBtn : null]}>
+                <Text style={styles.zoomText}>-</Text>
+              </TouchableOpacity>
+              <Text style={styles.zoomValue}>{Math.round(1 + zoom * 3)}x</Text>
+              <TouchableOpacity disabled={facing === 'front' || uploading} onPress={() => increaseZoom(0.1)} style={[styles.zoomBtn, (facing === 'front' || uploading) ? styles.disabledBtn : null]}>
+                <Text style={styles.zoomText}>+</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Pressable
+              onPress={takePicture}
+              style={({ pressed }) => [
+                styles.shutter,
+                pressed ? styles.shutterPressed : null,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Prendre une photo"
+              android_ripple={{ color: "rgba(255,255,255,0.2)", radius: 60 }}
+            >
+              <View style={styles.shutterInner} />
+            </Pressable>
+          </View>
         )}
       </View>
 
@@ -378,6 +397,11 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     backgroundColor: "#fff",
   },
+  controlsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16 },
+  zoomControls: { flexDirection: 'row', alignItems: 'center', marginRight: 12, backgroundColor: 'rgba(0,0,0,0.28)', paddingHorizontal: 8, paddingVertical: 6, borderRadius: 24 },
+  zoomBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.06)' },
+  zoomText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  zoomValue: { color: '#fff', marginHorizontal: 8, minWidth: 36, textAlign: 'center' },
   // --- Modal styles
   modalOverlay: {
     flex: 1,
