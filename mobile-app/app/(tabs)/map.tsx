@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StyleSheet, View, Image, Text } from 'react-native';
+import { StyleSheet, View, Image, Text, Platform, DeviceEventEmitter } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
@@ -50,14 +50,21 @@ function PhotoMap({ photos, current, mapRef }: { photos: PhotoPoint[]; current?:
           <View style={styles.markerContainer}>
             <Image source={{ uri: photo.uri }} style={styles.markerImage} />
           </View>
-          <Callout>
-            <View style={styles.calloutContainer}>
+          <Callout tooltip={Platform.OS === 'android'}>
+            <View style={styles.calloutBubble}>
               {photo.uri ? <Image source={{ uri: photo.uri }} style={styles.calloutImage} /> : null}
               <View style={styles.calloutTextWrap}>
                 <Text style={styles.calloutTitle}>{photo.legend ?? 'Photo'}</Text>
                 {photo.locationName ? <Text style={styles.calloutSubtitle}>{photo.locationName}</Text> : null}
                 {photo.createdAt ? <Text style={styles.calloutDate}>{new Date(photo.createdAt).toLocaleString()}</Text> : null}
               </View>
+              {/* arrow for tooltip on Android / custom bubble */}
+              {Platform.OS === 'android' && (
+                <>
+                  <View style={styles.calloutArrowBorder} />
+                  <View style={styles.calloutArrow} />
+                </>
+              )}
             </View>
           </Callout>
         </Marker>
@@ -81,34 +88,41 @@ export default function MapScreen() {
   const locationSubscriptionRef = useRef<any>(null);
   const mapRef = useRef<any>(null);
 
-  // fetch observations from backend
+  // fetch observations from backend (reusable)
+  const fetchPhotos = useCallback(async () => {
+    try {
+      const base = ENV_BACKEND_URL || 'http://192.168.1.212:3000/api';
+      const res = await fetch(`${base}/observations`);
+      if (!res.ok) throw new Error('Fetch failed');
+      const j = await res.json();
+      const list = Array.isArray(j?.observations) ? j.observations : [];
+      const mapped = list
+        .filter((o: any) => (o.lat !== undefined && o.lng !== undefined && o.lat !== null && o.lng !== null))
+        .map((o: any) => ({
+          id: String(o.id),
+          uri: o.imageUrl || o.imageURL || '',
+          latitude: Number(o.lat),
+          longitude: Number(o.lng),
+          legend: o.legend || o.caption || '',
+          locationName: o.locationName || '',
+          createdAt: o.createdAt || o.created_at || undefined,
+        }));
+      setPhotos(mapped);
+    } catch (err) {
+      console.warn('Failed to fetch observations for map', err);
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
-    const fetchPhotos = async () => {
-      try {
-        const base = ENV_BACKEND_URL || 'http://192.168.1.212:3000/api';
-        const res = await fetch(`${base}/observations`);
-        if (!res.ok) throw new Error('Fetch failed');
-        const j = await res.json();
-        const list = Array.isArray(j?.observations) ? j.observations : [];
-        if (!mounted) return;
-        const mapped = list
-          .filter((o: any) => (o.lat !== undefined && o.lng !== undefined && o.lat !== null && o.lng !== null))
-          .map((o: any) => ({
-            id: String(o.id),
-            uri: o.imageUrl || o.imageURL || '',
-            latitude: Number(o.lat),
-            longitude: Number(o.lng),
-            legend: o.legend || o.caption || '',
-            locationName: o.locationName || '',
-            createdAt: o.createdAt || o.createdAt,
-          }));
-        setPhotos(mapped);
-      } catch (err) {
-        console.warn('Failed to fetch observations for map', err);
-      }
-    };
-    fetchPhotos();
+
+    // initial fetch
+    if (mounted) fetchPhotos();
+
+    // listen for observation creations and refresh
+    const eventSub = DeviceEventEmitter.addListener('observation:created', () => {
+      fetchPhotos();
+    });
 
     // subscribe to current position (real-time)
     (async () => {
@@ -143,13 +157,18 @@ export default function MapScreen() {
       if (locationSubscriptionRef.current && typeof locationSubscriptionRef.current.remove === 'function') {
         locationSubscriptionRef.current.remove();
       }
+      // remove event listener
+      eventSub.remove();
     };
-  }, []);
+  }, [fetchPhotos]);
   // no animated pulse - current position is a static green dot updated in real-time
 
   // when screen comes into focus, center map on current position if available
   useFocusEffect(
     React.useCallback(() => {
+      // refresh data when screen is focused
+      fetchPhotos();
+
       if (current && mapRef.current && typeof mapRef.current.animateToRegion === 'function') {
         try {
           mapRef.current.animateToRegion({ latitude: current.latitude, longitude: current.longitude, latitudeDelta: 0.02, longitudeDelta: 0.02 }, 500);
@@ -157,7 +176,7 @@ export default function MapScreen() {
           // ignore
         }
       }
-    }, [current])
+    }, [current, fetchPhotos])
   );
 
   return (
@@ -185,8 +204,8 @@ const styles = StyleSheet.create({
     minWidth: 200,
   },
   calloutImage: {
-    width: 60,
-    height: 60,
+    width: 56,
+    height: 56,
     borderRadius: 4,
     marginRight: 8,
   },
@@ -211,4 +230,44 @@ const styles = StyleSheet.create({
   pulse: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,0,0,0.3)' },
   currentOuter: { position: 'absolute', width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,200,0,0.15)' },
   currentDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#00C853', borderWidth: 2, borderColor: '#fff' },
+  // Custom callout bubble for Android (tooltip)
+  calloutBubble: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 10,
+    minWidth: 220,
+    alignItems: 'flex-start',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  calloutArrow: {
+    position: 'absolute',
+    bottom: -6,
+    left: '50%',
+    transform: [{ translateX: -8 }],
+    width: 0,
+    height: 0,
+    borderLeftWidth: 8,
+    borderRightWidth: 8,
+    borderTopWidth: 10,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: '#fff',
+  },
+  calloutArrowBorder: {
+    position: 'absolute',
+    bottom: -8,
+    left: '50%',
+    transform: [{ translateX: -10 }],
+    width: 0,
+    height: 0,
+    borderLeftWidth: 10,
+    borderRightWidth: 10,
+    borderTopWidth: 12,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderTopColor: 'rgba(0,0,0,0.12)',
+  },
 });
