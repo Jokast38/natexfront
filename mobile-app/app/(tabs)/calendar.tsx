@@ -40,7 +40,7 @@ export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const BACKEND_URL = ENV_BACKEND_URL || "http://10.0.2.2:3000/api";
+  const BACKEND_URL = ENV_BACKEND_URL || "http://10.74.1.121:3000/api";
 
   // fetchData is used on mount, on focus and when an 'observation:created' event is emitted
   const fetchData = useCallback(async () => {

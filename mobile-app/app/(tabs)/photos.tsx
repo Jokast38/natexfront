@@ -89,7 +89,7 @@ export default function GalleryScreen() {
 
             // Call backend to delete
             try {
-              const res = await fetch(`${ENV_BACKEND_URL || 'http://192.168.1.212:3000/api'}/observations/${id}`, { method: 'DELETE' });
+              const res = await fetch(`${ENV_BACKEND_URL || 'http://10.74.1.121:3000/api'}/observations/${id}`, { method: 'DELETE' });
               if (res.status === 204 || res.ok) {
                 setObservations((prev) => prev.filter((p) => p.id !== id));
               } else {
