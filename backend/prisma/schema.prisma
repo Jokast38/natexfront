@@ -14,20 +14,23 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  firstName String
-  lastName  String
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
+  id           Int           @id @default(autoincrement())
+  firstName    String
+  lastName     String
+  email        String        @unique
+  password     String
+  createdAt    DateTime      @default(now())
+  observations Observation[]
 }
 
 model Observation {
-  id          Int      @id @default(autoincrement())
-  imageUrl    String?
-  lat         Float?
-  lng         Float?
+  id           Int      @id @default(autoincrement())
+  imageUrl     String?
+  lat          Float?
+  lng          Float?
   locationName String?
-  legend      String?
-  createdAt   DateTime @default(now())
+  legend       String?
+  createdAt    DateTime @default(now())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
 }

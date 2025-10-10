@@ -4,7 +4,6 @@ import {useEffect} from "react";
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Platform } from 'react-native';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {Provider, useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, persistor, RootState, store} from '@/src/redux/store';
 

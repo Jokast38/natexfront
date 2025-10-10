@@ -37,8 +37,8 @@ export default function Profile() {
     const [imageUri, setImageUri] = useState<string | null>(null);
 
     const initials = useMemo(() => {
-        const f = firstName?.trim()?.[0] ?? '';
-        const l = lastName?.trim()?.[0] ?? '';
+        const f = user.firstName?.trim()?.[0] ?? '';
+        const l = user.lastName?.trim()?.[0] ?? '';
         return (f + l).toUpperCase();
     }, [firstName, lastName]);
 
@@ -83,7 +83,7 @@ export default function Profile() {
                     style: "destructive",
                     onPress: async () => {
                         await persistor.purge();
-                        dispatch(logout({userId: user?.id}));
+                        dispatch(logout());
                     },
                 },
             ]
@@ -110,22 +110,22 @@ export default function Profile() {
                 <Text
                     style={[styles.nameLargeInput, {fontFamily: typography.fontFamily.bold}]}>{user?.firstName} {user.lastName}</Text>
 
-                <Text style={styles.bioText}>{bio}</Text>
+                {/*<Text style={styles.bioText}>{bio}</Text>*/}
 
-                <View style={styles.statsRowCentered}>
-                    <View style={styles.statCentered}>
-                        <Text style={styles.statValue}>{MOCK_USER.stats.observations}</Text>
-                        <Text style={styles.statLabel}>Observations</Text>
-                    </View>
-                    <View style={styles.statCentered}>
-                        <Text style={styles.statValue}>{MOCK_USER.stats.photos}</Text>
-                        <Text style={styles.statLabel}>Photos</Text>
-                    </View>
-                    <View style={styles.statCentered}>
-                        <Text style={styles.statValue}>{MOCK_USER.stats.badges}</Text>
-                        <Text style={styles.statLabel}>Badges</Text>
-                    </View>
-                </View>
+                {/*<View style={styles.statsRowCentered}>*/}
+                {/*    <View style={styles.statCentered}>*/}
+                {/*        <Text style={styles.statValue}>{MOCK_USER.stats.observations}</Text>*/}
+                {/*        <Text style={styles.statLabel}>Observations</Text>*/}
+                {/*    </View>*/}
+                {/*    <View style={styles.statCentered}>*/}
+                {/*        <Text style={styles.statValue}>{MOCK_USER.stats.photos}</Text>*/}
+                {/*        <Text style={styles.statLabel}>Photos</Text>*/}
+                {/*    </View>*/}
+                {/*    <View style={styles.statCentered}>*/}
+                {/*        <Text style={styles.statValue}>{MOCK_USER.stats.badges}</Text>*/}
+                {/*        <Text style={styles.statLabel}>Badges</Text>*/}
+                {/*    </View>*/}
+                {/*</View>*/}
             </View>
 
             <View style={styles.detailsCard}>
@@ -133,11 +133,7 @@ export default function Profile() {
                 <View style={styles.detailRow}><Text style={styles.detailLabel}>Nom complet</Text><Text
                     style={styles.detailValue}>{user.firstName} {user.lastName}</Text></View>
                 <View style={styles.detailRow}><Text style={styles.detailLabel}>Email</Text><Text
-                    style={styles.detailValue}>{username}@gmail.com</Text></View>
-                <View style={styles.detailRow}><Text style={styles.detailLabel}>Téléphone</Text><Text
-                    style={styles.detailValue}>0669734700</Text></View>
-                <View style={styles.detailRow}><Text style={styles.detailLabel}>Localisation</Text><Text
-                    style={styles.detailValue}>Paris, Île de France</Text></View>
+                    style={styles.detailValue}>{user.email}</Text></View>
             </View>
 
             <View style={styles.actionsColumn}>

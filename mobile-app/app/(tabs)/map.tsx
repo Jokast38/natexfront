@@ -91,7 +91,7 @@ export default function MapScreen() {
   // fetch observations from backend (reusable)
   const fetchPhotos = useCallback(async () => {
     try {
-      const base = ENV_BACKEND_URL || 'http://192.168.1.212:3000/api';
+      const base = ENV_BACKEND_URL || 'http://172.20.10.2:3000/api';
       const res = await fetch(`${base}/observations`);
       if (!res.ok) throw new Error('Fetch failed');
       const j = await res.json();
