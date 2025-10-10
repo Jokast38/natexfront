@@ -16,8 +16,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
-import * as Notifications from "expo-notifications";
+// Load expo-notifications dynamically to avoid automatic push-token registration in Expo Go
 import { DeviceEventEmitter } from 'react-native';
+import Constants from 'expo-constants';
 // We upload files to the backend and let the server handle Cloudinary (safer, avoids unsigned preset issues)
 // Use local config file to avoid Metro resolution issues with @env during dev
 import { BACKEND_URL as ENV_BACKEND_URL } from "../config/env";
@@ -107,16 +108,33 @@ export default function CameraScreen(): JSX.Element {
   // 🔔 Configuration des notifications locales
   useEffect(() => {
     (async () => {
-      await Notifications.requestPermissionsAsync();
-      Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: false,
-          shouldSetBadge: false,
-          shouldShowBanner: true,
-          shouldShowList: true,
-        }),
-      });
+      // If running inside Expo Go, skip loading expo-notifications to avoid automatic push registration
+      if (Constants?.appOwnership === 'expo') {
+        return;
+      }
+      try {
+        const Notifications = await import('expo-notifications');
+        if (Notifications) {
+          try {
+            await Notifications.requestPermissionsAsync();
+          } catch (e) {
+            // ignore permission failures in dev
+            console.warn('Notifications permission request failed', e);
+          }
+          Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+              shouldShowAlert: true,
+              shouldPlaySound: false,
+              shouldSetBadge: false,
+              shouldShowBanner: true,
+              shouldShowList: true,
+            }),
+          });
+        }
+      } catch (e) {
+        // dynamic import failed (likely in an environment without the native module)
+        console.warn('expo-notifications not available', e);
+      }
     })();
   }, []);
 
@@ -217,7 +235,18 @@ export default function CameraScreen(): JSX.Element {
       // feedback: gentle, non-blocking
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setInfoMsg('Upload réussi');
-      try { await Notifications.scheduleNotificationAsync({ content: { title: 'Upload réussi', body: locationName || 'Observation enregistrée' }, trigger: null }); } catch (e) { /* ignore */ }
+      try {
+        if (Constants?.appOwnership === 'expo') {
+          // skip scheduling local notifications in Expo Go
+        } else {
+          const Notifications = await import('expo-notifications');
+          if (Notifications && typeof Notifications.scheduleNotificationAsync === 'function') {
+            await Notifications.scheduleNotificationAsync({ content: { title: 'Upload réussi', body: locationName || 'Observation enregistrée' }, trigger: null });
+          }
+        }
+      } catch (e) {
+        /* ignore */
+      }
       try { DeviceEventEmitter.emit('observation:created'); } catch (e) { /* ignore */ }
       console.log('Upload success', body);
     } catch (err: any) {
